@@ -1,0 +1,30 @@
+{
+	"hash": "d41d8cd98f00b204e9800998ecf8427e",
+	"updated": "2022-07-27T14:41:55.7690148-03:00",
+	"installedModules": {
+		"github.com/dliocode/horse-utils-clientip": {
+			"name": "horse-utils-clientip",
+			"version": "0.0.8",
+			"hash": "83125fa6038e2377749e27e23b8f3aee",
+			"artifacts": {},
+			"failed": false,
+			"changed": false
+		},
+		"github.com/gabrielbaltazar/gbswagger": {
+			"name": "gbswagger",
+			"version": "3.0.3",
+			"hash": "a196098d0c5460808f2cf278a0c0b4e5",
+			"artifacts": {},
+			"failed": false,
+			"changed": false
+		},
+		"github.com/hashload/horse": {
+			"name": "horse",
+			"version": "3.0.2",
+			"hash": "929cb417c573af469c997a7e1fda5dbb",
+			"artifacts": {},
+			"failed": false,
+			"changed": false
+		}
+	}
+}
