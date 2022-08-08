@@ -14,8 +14,19 @@ type
   end;
 
   TConnectionInfo = class(THSSSerializable)
-    URL: String;
-    request_remote_ip: String;
+  private
+
+    FstartTime: TDateTime;
+    Frequest_remote_ip: String;
+    FURL: String;
+    public
+    property URL: String read FURL write FURL;
+    property request_remote_ip: String read Frequest_remote_ip write Frequest_remote_ip;
+    property startTime: TDateTime read FstartTime write FstartTime;
+
+    function toJSON: TJSONObject; override;
+    function getRunningTimeMS: Int64;
+    constructor create;
   end;
 
   TServerStatus = class(THSSSerializable)
@@ -25,12 +36,14 @@ type
     FConnections: TList<TConnectionInfo>;
     FstartTime: TDateTime;
     ftotalConnections: int64;
+    FtotalRunningTime: Int64;
   protected
     function GetCriticalSection: TCriticalSection;
   public
     property requisitions: Integer   read Frequisitions     write Frequisitions;
     property startTime: TDateTime    read FstartTime        write FstartTime;
     property totalConnections: int64 read ftotalConnections write ftotalConnections;
+    property totalRunningTime: Int64 read FtotalRunningTime write FtotalRunningTime;
     property Connections: TList<TConnectionInfo> read FConnections;
 
     function add(Connection: TConnectionInfo): Integer;
@@ -61,7 +74,7 @@ begin
     lCon.URL := Req.RawWebRequest.PathInfo;
     lCon.request_remote_ip := ClientIP(Req);
     try
-      Index := oServerStatus.Connections.add(lCon);
+      Index := oServerStatus.add(lCon);
       Next();
     finally
       oServerStatus.remove(lCon);
@@ -92,7 +105,9 @@ end;
 
 constructor TServerStatus.Create();
 begin
-  requisitions      := 0;
+  self.requisitions      := 0;
+  self.totalConnections  := 0;
+  self.totalRunningTime  := 0;
   FConnections      := TList<TConnectionInfo>.Create();
   FCriticalSection  := TCriticalSection.Create;
 end;
@@ -114,6 +129,7 @@ begin
   GetCriticalSection.Enter;
   try
     Self.FConnections.remove(Connection);
+    AtomicIncrement(self.totalRunningTime, MilliSecondsBetween(now, Connection.startTime));
   finally
     GetCriticalSection.Leave;
   end;
@@ -136,9 +152,11 @@ begin
     GetCriticalSection.Leave;
   end;
 
+  result.AddPair('startTime', DateToISO8601(Self.startTime));
   result.AddPair('uptime', SecondsBetween(now, Self.startTime));
   result.AddPair('requisitions', Self.requisitions);
   result.AddPair('totalConnections', Self.totalConnections);
+  result.AddPair('totalRunningTimeMS', Self.totalRunningTime);
   result.AddPair('connections', lArr)
 end;
 
@@ -147,6 +165,26 @@ end;
 function THSSSerializable.toJSON: TJSONObject;
 begin
   result := TJson.ObjectToJsonObject(Self);
+end;
+
+{ TConnectionInfo }
+
+
+constructor TConnectionInfo.create;
+begin
+  self.startTime := now;
+end;
+
+
+function TConnectionInfo.getRunningTimeMS: Int64;
+begin
+  result :=  MilliSecondsBetween(now, Self.startTime);
+end;
+
+function TConnectionInfo.toJSON: TJSONObject;
+begin
+  result := inherited;
+  result.AddPair('RunningTimeMS', getRunningTimeMS);
 end;
 
 initialization
