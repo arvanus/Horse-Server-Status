@@ -1,4 +1,4 @@
-# horse-exception-logger
+# horse-server-status
 Middleware for showing active routes being processed at the time in HORSE
 
 ### For install in your project using [boss](https://github.com/HashLoad/boss):
